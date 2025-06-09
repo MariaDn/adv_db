@@ -1,0 +1,28 @@
+services:
+  mysql:
+    image: mysql:8.3
+    container_name: ad_analytics_db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ad_analytics
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./initdb:/docker-entrypoint-initdb.d
+      - ./db_data:/var/lib/mysql
+
+  etl:
+    build: ./etl
+    depends_on:
+      - mysql
+    profiles: ["etl"]
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=ad_analytics
+    volumes:
+      - ./etl/data:/data

@@ -2,32 +2,16 @@
 
 This repository contains the solution to a data engineering assignment using AdTech dataset
 
-## Project Structure
-
-project/
-├── docker-compose.yml
-
-├── sql/
-│ ├── V1**create_database.sql
-│ └── V2**create_tables.sql
-├── etl/
-│ ├── data/
-│ ├── transform_load.py
-│ └── requirements.txt
-├── screenshots
-├── README.md
-└── .gitignore
-
 ## How to Run
 
-### 1. Clone the repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/MariaDn/adv_db
 cd adv_db
 ```
 
-### 2. Configurations
+### Configurations
 Create a .env file in the project root with the following content:
 ```bash
 # MySQL settings
@@ -48,11 +32,16 @@ mkdir ./db_data
 docker-compose up -d
 ```
 
-### 4. Start etl process
+### Start etl process
 
 ```bash
 docker-compose run --rm etl
 ```
+
+### Run analytics
+
+```bash
+docker-compose run --rm analytics
 
 ### 5. Download to mongo and run queries
 
@@ -61,7 +50,7 @@ docker-compose run --rm mongo_loader
 docker-compose run --rm mongo_analytics
 ```
 
-### 5. Download to casandra and run queries
+### Download to casandra and run queries
 
 Add credentials to .env
 CASSANDRA_HOST=

@@ -43,6 +43,15 @@ services:
     volumes:
       - ./etl/data:/data
 
+  analytics:
+    build: ./etl
+    depends_on:
+      - mysql
+    profiles: ["analytics"]
+    command: python /app/analytics/run_reports.py
+    volumes:
+      - ./:/app
+
   mongo_loader:
     build: ./etl
     command: python /app/mongo_data/load_to_mongo.py

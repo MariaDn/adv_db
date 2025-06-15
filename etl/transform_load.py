@@ -98,6 +98,22 @@ try:
         for advertiser_id, advertiser_name in cursor.fetchall()
     }
 
+    # ------------ Locations ----------------
+    unique_locations = set(df_users["Location"].dropna().unique()) | set(df_events["Location"].dropna().unique())
+
+    location_map = {}
+
+    print("Import to Locations")
+
+    for location in unique_locations:
+        cursor.execute("INSERT IGNORE INTO Locations (LocationName) VALUES (%s)", (location,))
+    conn.commit()
+
+    cursor.execute("SELECT LocationID, LocationName FROM Locations")
+    for location_id, name in cursor.fetchall():
+        location_map[name] = location_id
+
+
     # ------------ Interests ----------------
     print("Import to Interests")
     all_interests = set()
@@ -131,13 +147,13 @@ try:
                 row["UserID"],
                 row["Age"],
                 row["Gender"],
-                row["Location"],
+                location_map.get(row["Location"]),
                 row["SignupDate"],
             )
         )
     cursor.executemany(
         """
-        INSERT IGNORE INTO Users (UserID, Age, Gender, Location, SignupDate)
+        INSERT IGNORE INTO Users (UserID, Age, Gender, LocationID, SignupDate)
         VALUES (%s, %s, %s, %s, %s)
         """,
         users_data,
@@ -170,12 +186,13 @@ try:
         age_min, age_max, country, interests = parse_targeting_criteria(
             row["TargetingCriteria"]
         )
+        targeting_location_id = location_map.get(country) if country else None
 
         cursor.execute(
             """
             INSERT INTO Campaigns (
                 AdvertiserID, CampaignName, CampaignStartDate, CampaignEndDate,
-                Budget, RemainingBudget, TargetingAgeMin, TargetingAgeMax, TargetingCountry, AdSlotSize
+                Budget, RemainingBudget, TargetingAgeMin, TargetingAgeMax, TargetingLocationID, AdSlotSize
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
@@ -187,7 +204,7 @@ try:
                 row["RemainingBudget"],
                 age_min,
                 age_max,
-                country,
+                targeting_location_id,
                 row["AdSlotSize"],
             ),
         )
@@ -235,7 +252,6 @@ try:
                 campaign_id,
                 row["UserID"],
                 row["Device"],
-                row["Location"],
                 row["Timestamp"],
                 row["BidAmount"],
                 row["AdCost"],
@@ -248,9 +264,9 @@ try:
     cursor.executemany(
         """
         INSERT INTO AdEvents (
-            EventID, CampaignID, UserID, Device, Location, Timestamp,
+            EventID, CampaignID, UserID, Device, Timestamp,
             BidAmount, AdCost, AdRevenue, WasClicked, ClickTimestamp
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         ad_events_values,
     )

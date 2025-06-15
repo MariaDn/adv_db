@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS Interests;
 DROP TABLE IF EXISTS Users;
 DROP TABLE IF EXISTS Campaigns;
 DROP TABLE IF EXISTS Advertisers;
+DROP TABLE IF EXISTS Locations;
 
 /*
 Advertisers - рекламні агенції, це окрема сутність, що має ID і назву
@@ -16,6 +17,11 @@ Advertisers - рекламні агенції, це окрема сутніст�
 CREATE TABLE Advertisers (
     AdvertiserID INT AUTO_INCREMENT PRIMARY KEY,
     AdvertiserName VARCHAR(100) UNIQUE NOT NULL
+);
+
+CREATE TABLE Locations (
+    LocationID INT AUTO_INCREMENT PRIMARY KEY,
+    LocationName VARCHAR(100) UNIQUE NOT NULL
 );
 
 /*
@@ -31,13 +37,14 @@ CREATE TABLE Campaigns (
     CampaignName VARCHAR(100) NOT NULL,
     CampaignStartDate DATE,
     CampaignEndDate DATE,
-    Budget DECIMAL(15, 2),
-    RemainingBudget DECIMAL(15, 2),
-    TargetingAgeMin INT,
-    TargetingAgeMax INT,
-    TargetingCountry VARCHAR(100),
+    Budget DECIMAL(15, 2) CHECK (Budget >= 0),
+    RemainingBudget DECIMAL(15, 2) CHECK (RemainingBudget >= 0),
+    TargetingAgeMin INT CHECK (TargetingAgeMin >= 0),
+    TargetingAgeMax INT CHECK (TargetingAgeMax <= 120),
+    TargetingLocationID INT,
     AdSlotSize VARCHAR(50),
     FOREIGN KEY (AdvertiserID) REFERENCES Advertisers(AdvertiserID),
+    FOREIGN KEY (TargetingLocationID) REFERENCES Locations(LocationID),
     INDEX idx_advertiser_id (AdvertiserID)
 );
 
@@ -47,13 +54,13 @@ Users - користувачі та їхні атрибути
 
 CREATE TABLE Users (
     UserID BIGINT PRIMARY KEY,
-    Age INT,
+    Age INT CHECK (Age > 0 AND Age < 120),
     Gender ENUM('Male', 'Female', 'Non-Binary') NOT NULL,
-    Location VARCHAR(50),
+    LocationID INT,
     SignupDate DATE,
-    INDEX idx_location_age (Location, Age),
-    INDEX idx_signup_date (SignupDate)
-
+    INDEX idx_location_age (LocationID, Age),
+    INDEX idx_signup_date (SignupDate),
+    FOREIGN KEY (LocationID) REFERENCES Locations(LocationID)
 );
 
 /*
@@ -76,11 +83,10 @@ CREATE TABLE AdEvents (
     CampaignID INT NOT NULL,
     UserID BIGINT NOT NULL,
     Device VARCHAR(50),
-    Location VARCHAR(100),
     Timestamp DATETIME,
-    BidAmount FLOAT,
-    AdCost FLOAT,
-    AdRevenue FLOAT,
+    BidAmount DECIMAL(10, 2) CHECK (BidAmount >= 0),
+    AdCost DECIMAL(10, 2) CHECK (AdCost >= 0),
+    AdRevenue DECIMAL(10, 2) CHECK (AdRevenue >= 0),
     WasClicked TINYINT(1) NOT NULL DEFAULT 0,
     ClickTimestamp DATETIME NULL,
     FOREIGN KEY (CampaignID) REFERENCES Campaigns(CampaignID),
@@ -89,8 +95,7 @@ CREATE TABLE AdEvents (
     INDEX idx_user_id (UserID),
     INDEX idx_was_clicked (WasClicked),
     INDEX idx_timestamp (Timestamp),
-    INDEX idx_device_timestamp (Device, Timestamp),
-    INDEX idx_location_timestamp (Location, Timestamp)
+    INDEX idx_device_timestamp (Device, Timestamp)
 );
 
 CREATE TABLE UserInterests (

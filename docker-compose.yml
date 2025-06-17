@@ -3,26 +3,55 @@ services:
     image: mysql:8.3
     container_name: ad_analytics_db
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: ad_analytics
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
       - ./initdb:/docker-entrypoint-initdb.d
       - ./db_data:/var/lib/mysql
 
+  mongodb:
+    image: mongo:7.0
+    container_name: ad_analytics_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo_data:/data/db
+
   etl:
     build: ./etl
     depends_on:
       - mysql
     profiles: ["etl"]
-    environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_USER=user
-      - MYSQL_PASSWORD=password
-      - MYSQL_DATABASE=ad_analytics
     volumes:
       - ./etl/data:/data
+
+  mongo_loader:
+    build: ./etl
+    command: python /app/mongo_data/load_to_mongo.py
+    depends_on:
+      - mongodb
+    profiles: ["mongo_loader"]
+    environment:
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+    volumes:
+      - ./etl/data:/data
+      - ./etl:/app
+
+  mongo_analytics:
+    build: ./etl
+    command: python /app/mongo_data/run_queries.py
+    depends_on:
+      - mongodb
+    profiles: ["mongo_analytics"]
+    environment:
+      - MONGO_HOST=${MONGO_HOST}
+      - MONGO_PORT=${MONGO_PORT}
+    volumes:
+      - ./etl/data:/data
+      - ./etl:/app
+      - ./etl/mongo_data/results:/app/results

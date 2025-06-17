@@ -1,0 +1,18 @@
+[
+  {
+    "user_id": 475,
+    "session_id": "Tablet_2024-12-08",
+    "impression": {
+      "event_id": "39c906ea-6184-4642-b878-49d64bc03c0a",
+      "timestamp": "2024-12-08 03:22:12",
+      "campaign_name": "Campaign_823",
+      "device": "Tablet",
+      "location": "Australia",
+      "advertiser_name": "Advertiser_83",
+      "was_clicked": false,
+      "click_timestamp": null,
+      "ad_cost": 1.51,
+      "ad_revenue": 0.0
+    }
+  }
+]

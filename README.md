@@ -27,20 +27,41 @@ git clone https://github.com/MariaDn/adv_db
 cd adv_db
 ```
 
-### 2. Start MySQL using Docker and check created tables
+### 2. Configurations
+Create a .env file in the project root with the following content:
+```bash
+# MySQL settings
+MYSQL_HOST=mysql
+MYSQL_PORT=3306
+MYSQL_USER=user
+MYSQL_PASSWORD=password
+MYSQL_DATABASE=ad_analytics
+
+# MongoDB settings
+MONGO_HOST=mongodb
+MONGO_PORT=27017
+
+### 3. Start MySQL using Docker and check created tables
 
 ```bash
 mkdir ./db_data
 docker-compose up -d
 ```
 
-### 3. Start etl process
+### 4. Start etl process
 
 ```bash
 docker-compose run --rm etl
 ```
 
-### 4. Tech Stack
+### 5. Download to mongo and run queries
+
+```bash
+docker-compose run --rm mongo_loader
+docker-compose run --rm mongo_analytics
+```
+
+### Tech Stack
 
 MySQL 8
 

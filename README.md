@@ -61,6 +61,20 @@ docker-compose run --rm mongo_loader
 docker-compose run --rm mongo_analytics
 ```
 
+### 5. Download to casandra and run queries
+
+Add credentials to .env
+CASSANDRA_HOST=
+CASSANDRA_PORT=
+CASSANDRA_USERNAME=
+CASSANDRA_PASSWORD=
+
+```bash
+docker exec -i ad_analytics_cassandra cqlsh -f /app/schema.cql
+docker compose run --rm cassandra_loader
+docker compose run --rm cassandra_analytics python /app/cassandra_data/run_queries.py --cutoff-date 2024-10-01
+```
+
 ### Tech Stack
 
 MySQL 8

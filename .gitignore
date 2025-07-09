@@ -1,4 +1,5 @@
 db_data/
 /mongo_data/
+/cassandra_data/
 .env
 **/.DS_Store

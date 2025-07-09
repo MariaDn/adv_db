@@ -21,6 +21,20 @@ services:
     volumes:
       - ./mongo_data:/data/db
 
+  cassandra:
+    image: cassandra:4.1
+    container_name: ad_analytics_cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./cassandra_data:/var/lib/cassandra
+      - ./etl/cassandra_data:/app
+    environment:
+      - CASSANDRA_CLUSTER_NAME=AdAnalyticsCluster
+      - CASSANDRA_NUM_TOKENS=16
+    networks:
+      - default
+
   etl:
     build: ./etl
     depends_on:
@@ -55,3 +69,41 @@ services:
       - ./etl/data:/data
       - ./etl:/app
       - ./etl/mongo_data/results:/app/results
+
+  cassandra_loader:
+    build: ./etl
+    command: python /app/cassandra_data/load_to_cassandra.py
+    depends_on:
+      - cassandra
+    profiles: ["cassandra_loader"]
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - CASSANDRA_HOST=${CASSANDRA_HOST}
+      - CASSANDRA_PORT=${CASSANDRA_PORT}
+      - CASSANDRA_USERNAME=${CASSANDRA_USERNAME}
+      - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
+    volumes:
+      - ./etl:/app
+      - ./etl/data:/data
+
+  cassandra_analytics:
+    build: ./etl
+    command: python /app/cassandra_data/run_queries.py
+    depends_on:
+      - cassandra
+    profiles: ["cassandra_analytics"]
+    environment:
+      - CASSANDRA_HOST=${CASSANDRA_HOST}
+      - CASSANDRA_PORT=${CASSANDRA_PORT}
+      - CASSANDRA_USERNAME=${CASSANDRA_USERNAME}
+      - CASSANDRA_PASSWORD=${CASSANDRA_PASSWORD}
+    volumes:
+      - ./etl:/app
+      - ./etl/data:/data
+      - ./etl/cassandra_data/results:/app/results
+
+

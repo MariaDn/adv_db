@@ -35,6 +35,12 @@ services:
     networks:
       - default
 
+  redis:
+    image: redis:7
+    container_name: ad_analytics_redis
+    ports:
+      - "6379:6379"
+
   etl:
     build: ./etl
     depends_on:
@@ -115,4 +121,21 @@ services:
       - ./etl/data:/data
       - ./etl/cassandra_data/results:/app/results
 
-
+  fastapi_api:
+    build: ./api
+    container_name: ad_analytics_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+    volumes:
+      - ./api:/app

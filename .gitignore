@@ -3,3 +3,4 @@ db_data/
 /cassandra_data/
 .env
 **/.DS_Store
+__pycache__
